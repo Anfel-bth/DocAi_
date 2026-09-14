@@ -4,6 +4,7 @@ import {
   getAllDocuments,
   getDocumentById,
   extractAndStoreText,
+  deleteDocument,
 } from "../services/documentService.js";
 import { askQuestion } from "../services/llmService.js";
 import {
@@ -61,8 +62,22 @@ export async function askQuestionAboutDocument(req, res) {
     res.json({ question, answer });
   } catch (err) {
     console.error("LLM request failed:", err.message);
-    res.status(502).json({ error: "Could not reach the LLM server." });
+    res.status(502).json({
+      error: err.message || "Could not reach the LLM server.",
+    });
   }
+}
+
+export function deleteDocumentHandler(req, res) {
+  const { id } = req.params;
+  const document = getDocumentById(id);
+
+  if (!document) {
+    return res.status(404).json({ error: "Document not found." });
+  }
+
+  deleteDocument(id);
+  res.status(204).send();
 }
 
 export function listConversations(req, res) {

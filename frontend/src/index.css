@@ -1,0 +1,52 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg-main: #ffffff;
+  --bg-sidebar: #fffbf2;
+  --bg-hover: #fff3d1;
+  --accent: #ffc94a;
+  --accent-hover: #f5b82e;
+  --text-primary: #2b2a26;
+  --text-secondary: #8a8677;
+  --border: #f0ebd8;
+  --danger: #d9534f;
+
+  --font-display: 'Fredoka', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--bg-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}

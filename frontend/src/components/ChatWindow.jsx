@@ -42,17 +42,46 @@ export default function ChatWindow({ documentId }) {
 
   if (!documentId) {
     return (
-      <p style={{ color: "#777" }}>
-        Select a document to start asking questions.
-      </p>
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--text-secondary)",
+        }}
+      >
+        <p>Select or upload a document to start asking questions.</p>
+      </div>
     );
   }
 
   return (
-    <div>
-      <MessageList messages={messages} />
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-      <MessageInput onSend={handleSend} disabled={asking} />
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        maxWidth: 760,
+        margin: "0 auto",
+        width: "100%",
+        padding: "0 24px",
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          paddingTop: 32,
+          paddingBottom: 16,
+        }}
+      >
+        <MessageList messages={messages} />
+        {error && <p style={{ color: "var(--danger)" }}>{error}</p>}
+      </div>
+      <div style={{ paddingBottom: 24 }}>
+        <MessageInput onSend={handleSend} disabled={asking} />
+      </div>
     </div>
   );
 }
