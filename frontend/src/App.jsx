@@ -20,7 +20,13 @@ export default function App() {
         onUploaded={handleUploaded}
       />
       <main style={{ flex: 1 }}>
-        <ChatWindow documentId={selectedId} />
+        <ChatWindow
+          documentId={selectedId}
+          onDocumentDeleted={() => {
+            setSelectedId(null);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
       </main>
     </div>
   );

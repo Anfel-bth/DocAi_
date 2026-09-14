@@ -22,3 +22,18 @@ export function getConversationsByDocumentId(documentId) {
     )
     .all(documentId);
 }
+
+export function deleteConversationsByDocumentId(documentId) {
+  db.prepare("DELETE FROM conversations WHERE document_id = ?").run(
+    documentId,
+  );
+}
+
+export function deleteConversation(documentId, conversationId) {
+  const result = db
+    .prepare(
+      "DELETE FROM conversations WHERE id = ? AND document_id = ?",
+    )
+    .run(conversationId, documentId);
+  return result.changes > 0;
+}

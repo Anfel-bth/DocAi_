@@ -6,10 +6,12 @@ import {
   extractAndStoreText,
   deleteDocument,
 } from "../services/documentService.js";
-import { askQuestion } from "../services/llmService.js";
+import { streamQuestion } from "../services/llmService.js";
 import {
   addConversation,
   getConversationsByDocumentId,
+  deleteConversationsByDocumentId,
+  deleteConversation,
 } from "../services/conversationService.js";
 
 export function uploadDocument(req, res) {
@@ -56,15 +58,29 @@ export async function askQuestionAboutDocument(req, res) {
     return res.status(409).json({ error: "Document is still processing." });
   }
 
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const send = (payload) => {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  };
+
   try {
-    const answer = await askQuestion(document.extracted_text, question);
+    const answer = await streamQuestion(
+      document.extracted_text,
+      question,
+      (token) => send({ token }),
+    );
     addConversation(document.id, question, answer);
-    res.json({ question, answer });
+    send({ done: true });
+    res.end();
   } catch (err) {
     console.error("LLM request failed:", err.message);
-    res.status(502).json({
-      error: err.message || "Could not reach the LLM server.",
-    });
+    send({ error: err.message || "Could not reach the LLM server." });
+    res.end();
   }
 }
 
@@ -83,4 +99,32 @@ export function deleteDocumentHandler(req, res) {
 export function listConversations(req, res) {
   const { id } = req.params;
   res.json(getConversationsByDocumentId(id));
+}
+
+export function clearConversationsHandler(req, res) {
+  const { id } = req.params;
+  const document = getDocumentById(id);
+
+  if (!document) {
+    return res.status(404).json({ error: "Document not found." });
+  }
+
+  deleteConversationsByDocumentId(id);
+  res.status(204).send();
+}
+
+export function deleteConversationHandler(req, res) {
+  const { id, conversationId } = req.params;
+  const document = getDocumentById(id);
+
+  if (!document) {
+    return res.status(404).json({ error: "Document not found." });
+  }
+
+  const deleted = deleteConversation(id, conversationId);
+  if (!deleted) {
+    return res.status(404).json({ error: "Message not found." });
+  }
+
+  res.status(204).send();
 }

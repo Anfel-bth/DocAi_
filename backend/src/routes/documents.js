@@ -6,6 +6,8 @@ import {
   listDocuments,
   askQuestionAboutDocument,
   listConversations,
+  clearConversationsHandler,
+  deleteConversationHandler,
   deleteDocumentHandler,
 } from "../controllers/documentController.js";
 
@@ -16,5 +18,7 @@ router.get("/documents", listDocuments);
 router.delete("/documents/:id", deleteDocumentHandler);
 router.post("/documents/:id/ask", askQuestionAboutDocument);
 router.get("/documents/:id/conversations", listConversations);
+router.delete("/documents/:id/conversations/:conversationId", deleteConversationHandler);
+router.delete("/documents/:id/conversations", clearConversationsHandler);
 
 export default router;

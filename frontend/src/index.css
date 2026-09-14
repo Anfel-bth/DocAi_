@@ -50,3 +50,27 @@ input:focus-visible {
   background: var(--border);
   border-radius: 8px;
 }
+
+.message-delete {
+  opacity: 0;
+}
+
+.message-turn:hover .message-delete {
+  opacity: 1;
+}
+
+.message-delete:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.streaming-cursor::after {
+  content: "▍";
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

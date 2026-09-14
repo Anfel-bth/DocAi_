@@ -212,13 +212,14 @@ export default function Sidebar({
                 onClick={(e) => handleDelete(e, doc.id)}
                 aria-label={`Delete ${doc.name}`}
                 className="delete-btn"
+                title="Delete document"
                 style={{
                   background: "none",
                   border: "none",
                   padding: 4,
                   borderRadius: 6,
                   color: "var(--text-secondary)",
-                  opacity: 0,
+                  opacity: 0.55,
                 }}
               >
                 <TrashIcon />
@@ -252,7 +253,7 @@ export default function Sidebar({
 
       <style>{`
         .doc-row:hover { background: var(--bg-hover); }
-        .doc-row:hover .delete-btn { opacity: 1; }
+        .doc-row:hover .delete-btn { opacity: 1; color: var(--danger); }
         .delete-btn:hover { background: rgba(0,0,0,0.06); }
       `}</style>
     </aside>
