@@ -1,0 +1,9 @@
+PORT=3000
+LLAMA_SERVER_URL=http://localhost:8080/v1/chat/completions
+MAX_UPLOAD_SIZE_MB=10node_modules/
+.env
+uploads/
+*.gguf
+*.sqlite
+dist/
+build/
