@@ -7,11 +7,12 @@ import {
   deleteDocument,
 } from "../services/documentService.js";
 import { streamQuestion } from "../services/llmService.js";
+import { findRelevantChunks } from "../services/chunkService.js";
 import {
   addConversation,
   getConversationsByDocumentId,
-  deleteConversationsByDocumentId,
   deleteConversation,
+  deleteConversationsByDocumentId,
 } from "../services/conversationService.js";
 
 export function uploadDocument(req, res) {
@@ -24,9 +25,6 @@ export function uploadDocument(req, res) {
     filePath: req.file.path,
   });
 
-  // Extraction runs right after upload, in the same request, for the MVP.
-  // We don't await-block the response on it failing silently -- errors are
-  // caught and stored as status = 'Failed' inside extractAndStoreText.
   extractAndStoreText(document.id, req.file.path).catch((err) => {
     console.error(
       `Extraction failed for document ${document.id}:`,
@@ -39,6 +37,18 @@ export function uploadDocument(req, res) {
 
 export function listDocuments(req, res) {
   res.json(getAllDocuments());
+}
+
+export function deleteDocumentHandler(req, res) {
+  const { id } = req.params;
+  const document = getDocumentById(id);
+
+  if (!document) {
+    return res.status(404).json({ error: "Document not found." });
+  }
+
+  deleteDocument(id);
+  res.status(204).send();
 }
 
 export async function askQuestionAboutDocument(req, res) {
@@ -58,47 +68,46 @@ export async function askQuestionAboutDocument(req, res) {
     return res.status(409).json({ error: "Document is still processing." });
   }
 
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
-  res.flushHeaders?.();
-
-  const send = (payload) => {
-    res.write(`data: ${JSON.stringify(payload)}\n\n`);
-  };
+  let hasStartedStreaming = false;
 
   try {
-    const answer = await streamQuestion(
-      document.extracted_text,
-      question,
-      (token) => send({ token }),
-    );
-    addConversation(document.id, question, answer);
-    send({ done: true });
+    const relevantText = await findRelevantChunks(document.id, question);
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+
+    const fullAnswer = await streamQuestion(relevantText, question, (token) => {
+      hasStartedStreaming = true;
+      res.write(token);
+    });
+
+    addConversation(document.id, question, fullAnswer);
     res.end();
   } catch (err) {
     console.error("LLM request failed:", err.message);
-    send({ error: err.message || "Could not reach the LLM server." });
-    res.end();
+
+    if (hasStartedStreaming) {
+      res.write(`\n\n[Error: ${err.message}]`);
+      res.end();
+    } else {
+      res.status(502).json({ error: "Could not reach the LLM server." });
+    }
   }
-}
-
-export function deleteDocumentHandler(req, res) {
-  const { id } = req.params;
-  const document = getDocumentById(id);
-
-  if (!document) {
-    return res.status(404).json({ error: "Document not found." });
-  }
-
-  deleteDocument(id);
-  res.status(204).send();
 }
 
 export function listConversations(req, res) {
   const { id } = req.params;
   res.json(getConversationsByDocumentId(id));
+}
+
+export function deleteConversationHandler(req, res) {
+  const { id, conversationId } = req.params;
+  const deleted = deleteConversation(id, conversationId);
+
+  if (!deleted) {
+    return res.status(404).json({ error: "Conversation not found." });
+  }
+
+  res.status(204).send();
 }
 
 export function clearConversationsHandler(req, res) {
@@ -110,21 +119,5 @@ export function clearConversationsHandler(req, res) {
   }
 
   deleteConversationsByDocumentId(id);
-  res.status(204).send();
-}
-
-export function deleteConversationHandler(req, res) {
-  const { id, conversationId } = req.params;
-  const document = getDocumentById(id);
-
-  if (!document) {
-    return res.status(404).json({ error: "Document not found." });
-  }
-
-  const deleted = deleteConversation(id, conversationId);
-  if (!deleted) {
-    return res.status(404).json({ error: "Message not found." });
-  }
-
   res.status(204).send();
 }

@@ -25,6 +25,15 @@ db.exec(`
   );
 `);
 
-console.log(
-  "Database ready: app.sqlite (documents, conversations tables created)",
-);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    embedding TEXT NOT NULL,
+    FOREIGN KEY (document_id) REFERENCES documents(id)
+  );
+`);
+
+console.log("Database ready: app.sqlite (documents, conversations, chunks tables created)");
